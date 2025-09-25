@@ -9,11 +9,11 @@ pipeline {
     stages {
         stage('Clean Workspace') {
             steps {
-                echo 'CLeaning workspace'
+                echo 'Cleaning workspace'
                 deleteDir()
             }
         }
-        stage('Lint') {
+        stage('Checkout') {
             steps {
                 echo "Cloning the repo from Github ........."
                 git branch: "${BRANCH}",
@@ -25,15 +25,15 @@ pipeline {
             steps {
                 sh 'dos2unix build.sh'
                 sh 'chmod +x build.sh'
-                sh 'bash build.sh'
+                sh './build.sh'
             }
         }
     }
-}
-post {
+
+    post {
         unstable {
             echo 'Build marked as UNSTABLE!'
-            emailext (
+            emailext(
                 subject: "Build Unstable: ${env.JOB_NAME} [#${env.BUILD_NUMBER}]",
                 body: """<p>Build became <b>UNSTABLE</b> in job <b>${env.JOB_NAME}</b> [#${env.BUILD_NUMBER}]</p>""",
                 recipientProviders: [[$class: 'DevelopersRecipientProvider']]
@@ -41,10 +41,11 @@ post {
         }
         failure {
             echo 'Build failed!'
-            emailext (
+            emailext(
                 subject: "Build Failed: ${env.JOB_NAME} [#${env.BUILD_NUMBER}]",
                 body: """<p>Build failed in job <b>${env.JOB_NAME}</b> [#${env.BUILD_NUMBER}]</p>""",
                 recipientProviders: [[$class: 'DevelopersRecipientProvider']]
             )
-        }
-    }
+        }
+    }
+}
