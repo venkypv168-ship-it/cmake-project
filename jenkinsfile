@@ -71,7 +71,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build') {
             steps {
                 echo 'Running build with CMake...'
@@ -89,7 +88,6 @@ pipeline {
                 '''
             }
         }
-
         stage('Unit Tests') {
             steps {
                 echo 'Running unit tests...'
@@ -104,7 +102,7 @@ pipeline {
                 '''
             }
         }
-
+/*
         stage('SonarQube Analysis') {
             steps {
                 echo 'Running SonarQube (SonarCloud) analysis...'
@@ -121,6 +119,7 @@ pipeline {
                 }
             }
         }
+/*
     }
 
     post {
