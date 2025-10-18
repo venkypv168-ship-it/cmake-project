@@ -115,7 +115,7 @@ pipeline {
                 echo 'Running SonarQube (SonarCloud) analysis...'
                 withSonarQubeEnv("${SONARQUBE_ENV}") {
                     sh '''
-                        sonar-scanner \
+                        sonarqube \
                           -Dsonar.organization=${SONAR_ORGANIZATION} \
                           -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                           -Dsonar.sources=src \
