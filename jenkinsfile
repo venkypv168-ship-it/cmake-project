@@ -4,36 +4,63 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/venkypv168-ship-it/cmake-project.git'
         BRANCH = 'main'
+
+        // SonarCloud Configuration
         SONARQUBE_ENV = 'SonarCloud'
         SONAR_ORGANIZATION = 'venkypv168-ship-it'
         SONAR_PROJECT_KEY = 'venkypv168-ship-it_cmake_project'
-        JAVA_HOME = "/usr/lib/jvm/java-21-openjdk"
-        PATH = "${env.JAVA_HOME}/bin:${env.PATH}:${env.PATH}"
     }
+
     stages {
+
         stage('Prepare Tools') {
             steps {
+                echo 'Installing required tools...'
                 sh '''
-                    sudo yum install -y python3 python3-pip dos2unix epel-release cmake gcc gcc-c++
-                    pip3 install --quiet cmakelint
+                    if ! command -v pip3 &>/dev/null; then
+                        echo "Installing Python3 and pip3..."
+                        sudo yum install -y python3 python3-pip || true
+                    fi
+
+                    echo "Installing cmakelint..."
+                    pip3 install --quiet cmakelint || true
+
+                    if ! command -v dos2unix &>/dev/null; then
+                        echo "Installing dos2unix..."
+                        sudo yum install -y dos2unix || true
+                    fi
+
+                    if ! command -v cmake &>/dev/null; then
+                        echo "Installing CMake..."
+                        sudo yum install -y epel-release || true
+                        sudo yum install -y cmake || true
+                    fi
+
+                    if ! command -v gcc &>/dev/null; then
+                        echo "Installing GCC..."
+                        sudo yum install -y gcc gcc-c++ || true
+                    fi
                 '''
             }
         }
 
         stage('Clean Workspace') {
             steps {
+                echo "Cleaning Workspace..."
                 deleteDir()
             }
         }
 
         stage('Checkout') {
             steps {
+                echo "Cloning repository from ${GIT_REPO} (branch: ${BRANCH})"
                 git branch: "${BRANCH}", url: "${GIT_REPO}"
             }
         }
 
         stage('Lint') {
             steps {
+                echo 'Running lint checks on main.c...'
                 sh '''
                     if [ -f src/main.c ]; then
                         cmakelint src/main.c > lint_report.txt
@@ -52,26 +79,40 @@ pipeline {
 
         stage('Build') {
             steps {
+                echo 'Running build with CMake...'
                 sh '''
-                    mkdir -p build && cd build
-                    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-                    make -j$(nproc)
-                    cp compile_commands.json ..
+                    if [ -f CMakeLists.txt ]; then
+                        mkdir -p build
+                        cd build
+                        cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+                        make -j$(nproc)
+                        cp compile_commands.json ..
+                    else
+                        echo "CMakeLists.txt not found!"
+                        exit 1
+                    fi
                 '''
             }
         }
 
         stage('Unit Tests') {
             steps {
+                echo 'Running unit tests...'
                 sh '''
-                    cd build
-                    ctest --output-on-failure || true
+                    if [ -d build ]; then
+                        cd build
+                        ctest --output-on-failure
+                    else
+                        echo "Build directory not found!"
+                        exit 1
+                    fi
                 '''
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
+                echo 'Running SonarQube (SonarCloud) analysis...'
                 withSonarQubeEnv("${SONARQUBE_ENV}") {
                     sh '''
                         sonar-scanner \
@@ -88,11 +129,14 @@ pipeline {
     }
 
     post {
+        always {
+            echo 'Pipeline finished.'
+        }
         success {
             echo '✅ Build, lint, and SonarCloud analysis completed successfully!'
         }
         failure {
-            echo '❌ Pipeline failed. Check Jenkins logs or SonarCloud dashboard.'
+            echo '❌ Pipeline failed. Check logs or SonarCloud dashboard.'
         }
     }
 }
