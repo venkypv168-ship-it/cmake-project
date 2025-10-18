@@ -8,7 +8,7 @@ pipeline {
         // SonarCloud Configuration
         SONARQUBE_ENV = 'SonarCloud'
         SONAR_ORGANIZATION = 'venkypv168-ship-it'
-        SONAR_PROJECT_KEY = 'venkypv168-ship-it_cmake-project'
+        SONAR_PROJECT_KEY = 'venkypv168-ship-it_cmake_project'
     }
 
     stages {
@@ -71,6 +71,7 @@ pipeline {
                 }
             }
         }
+
         stage('Build') {
             steps {
                 echo 'Running build with CMake...'
@@ -88,6 +89,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Unit Tests') {
             steps {
                 echo 'Running unit tests...'
@@ -102,6 +104,7 @@ pipeline {
                 '''
             }
         }
+
         stage('SonarQube Analysis') {
             steps {
                 echo 'Running SonarQube (SonarCloud) analysis...'
@@ -129,6 +132,6 @@ pipeline {
         }
         failure {
             echo '❌ Pipeline failed. Check logs or SonarCloud dashboard.'
-        }
-    }
+        }
+    }
 }
