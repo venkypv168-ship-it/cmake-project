@@ -7,15 +7,9 @@ pipeline {
         SONARQUBE_ENV = 'SonarCloud'
         SONAR_ORGANIZATION = 'venkypv168-ship-it'
         SONAR_PROJECT_KEY = 'venkypv168-ship-it_cmake_project'
-        JAVA_HOME = "/usr/lib/jvm/java-17-openjdk"
+        JAVA_HOME = "/usr/lib/jvm/java-21-openjdk"
         PATH = "${env.JAVA_HOME}/bin:${env.PATH}:${env.PATH}"
     }
-
-    tools {
-        // Optional if you configured Jenkins tools
-        // sonarQubeScanner "sonar-scanner"
-    }
-
     stages {
         stage('Prepare Tools') {
             steps {
